@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pok Deng (ป๊อกเด้ง)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a0d08 radial-gradient(ellipse at 50% 0%, #3a1f12 0%, #140a06 70%);
+    min-height: 100vh; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 6px; user-select: none; overflow-x: hidden; overflow-y: auto; }
+  h1 { font-size: 1.25em; margin: 2px 0; text-shadow: 0 2px 4px rgba(0,0,0,.6); }
+  #topbar { display: flex; gap: 14px; align-items: center; background: rgba(0,0,0,.45); padding: 4px 14px; border-radius: 8px; font-size: 13px; flex-wrap: wrap; justify-content: center; z-index: 5; }
+  #topbar b { color: #ffd45e; }
+  button { background: #e8b84b; color: #3a2a00; border: none; border-radius: 8px; padding: 7px 15px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,.4); margin: 2px; }
+  button:hover { background: #ffd066; }
+  button:disabled { opacity: .4; cursor: default; }
+  button.hit { background: #4fc3f7; } button.stay { background: #81c784; }
+
+  /* ============ THE TABLE ============ */
+  #tableWrap { position: relative; width: 980px; max-width: 100vw; height: 560px; margin-top: 4px;
+    transform-origin: top center; }
+  #felt { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    width: 920px; height: 520px; border-radius: 50% / 46%;
+    background: radial-gradient(ellipse at 50% 38%, #2e8b57 0%, #1d6a40 55%, #14502f 100%);
+    border: 14px solid #5a3a1e;
+    box-shadow: inset 0 0 60px rgba(0,0,0,.55), 0 18px 40px rgba(0,0,0,.65),
+                inset 0 4px 10px rgba(255,255,255,.08);
+  }
+  #felt::before { content: ''; position: absolute; inset: 26px; border: 2px solid rgba(255,220,130,.25); border-radius: 50% / 46%; }
+  #feltLogo { position: absolute; left: 50%; top: 40%; transform: translate(-50%,-50%); text-align: center;
+    color: rgba(255,255,255,.14); font-weight: bold; font-size: 26px; letter-spacing: 3px; pointer-events: none; }
+
+  /* deck in the middle */
+  #deckPile { position: absolute; left: 50%; top: 52%; transform: translate(-50%,-50%); width: 46px; height: 64px; }
+  #deckPile .card { position: absolute; width: 46px; height: 64px; }
+  #deckPile .card:nth-child(1) { top: 3px; left: 3px; }
+  #deckPile .card:nth-child(2) { top: 1.5px; left: 1.5px; }
+
+  /* ============ SEATS ============ */
+  .seat { position: absolute; width: 230px; text-align: center; }
+  #seatD { left: 50%; top: 30px; transform: translateX(-50%); }
+  #seat1 { right: 8px; top: 205px; }     /* Riku right */
+  #seat2 { left: 8px;  top: 205px; }     /* Mei left  */
+  #seat0 { left: 50%; bottom: 10px; transform: translateX(-50%); }
+
+  .plate { display: inline-flex; gap: 8px; align-items: center; background: rgba(0,0,0,.55); border: 2px solid rgba(255,212,94,.35);
+    border-radius: 20px; padding: 3px 14px; font-size: 13px; font-weight: bold; position: relative; }
+  .seat.active .plate { border-color: #ffd45e; box-shadow: 0 0 16px rgba(255,212,94,.6); }
+  .plate .av { font-size: 17px; }
+  .plate .chipC { color: #9fd8c0; font-weight: normal; }
+  .res { position: absolute; left: 50%; transform: translateX(-50%); top: -26px; font-weight: bold; font-size: 14px;
+    background: rgba(0,0,0,.7); border-radius: 10px; padding: 1px 10px; white-space: nowrap; }
+  .res.w { color: #8aff9e; } .res.l { color: #ff9e9e; } .res.t { color: #cfd8dc; }
+  .bubble { position: absolute; left: 50%; transform: translateX(-50%); top: -52px; background: #fff; color: #333;
+    border-radius: 12px; padding: 3px 12px; font-size: 12px; font-weight: bold; white-space: nowrap; animation: pop .25s ease; z-index: 8; }
+  .bubble::after { content:''; position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
+  @keyframes pop { from { transform: translateX(-50%) scale(.5); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+
+  .cards { display: flex; justify-content: center; min-height: 80px; margin-top: 6px; }
+  #seatD .cards { margin-top: 8px; }
+  #seat0 .cards { margin-top: 0; margin-bottom: 6px; }
+  .handinfo { font-size: 12px; color: #ffe0a3; min-height: 15px; text-shadow: 0 1px 2px #000; }
+
+  /* cards fanned on felt */
+  .card { width: 54px; height: 76px; border-radius: 7px; background: #fff; color: #111; position: relative;
+    box-shadow: 0 3px 7px rgba(0,0,0,.55); display: flex; flex-direction: column; justify-content: space-between;
+    padding: 4px 6px; font-weight: bold; margin: 0 -7px; }
+  .cards .card:nth-child(1) { transform: rotate(-7deg) translateY(3px); }
+  .cards .card:nth-child(2) { transform: rotate(0deg); }
+  .cards .card:nth-child(3) { transform: rotate(7deg) translateY(3px); }
+  .card.dealt { animation: dealIn .4s cubic-bezier(.2,.8,.3,1); }
+  @keyframes dealIn { from { transform: translate(var(--fx,0px), var(--fy,-200px)) rotate(40deg) scale(.6); opacity: .3; } }
+  .card.flip { animation: flipIn .4s ease; }
+  @keyframes flipIn { 0% { transform: rotateY(90deg); } }
+  .card .tr { align-self: flex-end; transform: rotate(180deg); }
+  .card .rank { font-size: 15px; line-height: 1.05; }
+  .card .mid { font-size: 23px; text-align: center; }
+  .card.red { color: #c62828; }
+  .card.back { background: repeating-linear-gradient(45deg, #8c1f1f, #8c1f1f 6px, #a93a2e 6px, #a93a2e 12px); border: 3px solid #fff; }
+
+  .betplate { font-size: 12px; color: #ffd45e; min-height: 15px; text-shadow: 0 1px 2px #000; }
+
+  /* ============ CONTROLS ============ */
+  #controls { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 5; margin-top: 2px; }
+  .chip { width: 46px; height: 46px; border-radius: 50%; border: 4px dashed #fff; font-weight: bold; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 3px 6px rgba(0,0,0,.5); color:#fff; transition: transform .15s; }
+  .chip.c5 { background: #5c6bc0; } .chip.c10 { background: #26a69a; } .chip.c25 { background: #ef5350; } .chip.c50 { background: #7e57c2; }
+  .chip.sel { transform: scale(1.18); border-style: solid; }
+  #actions { min-height: 40px; display: flex; gap: 6px; align-items: center; justify-content: center; }
+  #status { text-align: center; font-size: 14px; min-height: 19px; font-weight: bold; text-shadow: 0 1px 3px #000; z-index: 5; }
+  #msg { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.75); z-index: 99; }
+  #msgBox { background: #2a1409; border: 2px solid #e8b84b; border-radius: 14px; padding: 22px 28px; text-align: center; max-width: 560px; max-height: 85vh; overflow: auto; }
+</style>
+</head>
+<body>
+<h1>🃏 Pok Deng (ป๊อกเด้ง)</h1>
+<div id="topbar">
+  <span>Round: <b id="round">1</b></span>
+  <button onclick="showRules()">❓ Rules</button>
+</div>
+<div id="status"></div>
+
+<div id="tableWrap">
+  <div id="felt"></div>
+  <div id="feltLogo">POK DENG<br><span style="font-size:14px">ป๊อกเด้ง</span><br><span id="feltHint" style="font-size:15px;color:rgba(255,255,255,.45);letter-spacing:1px">pick a bet & press DEAL ⬇</span></div>
+  <div id="deckPile"><div class="card back"></div><div class="card back"></div></div>
+
+  <div class="seat" id="seatD">
+    <div class="plate"><span class="av">🎩</span> Dealer <span class="res" id="resD"></span><span id="bubD"></span></div>
+    <div class="cards" id="cardsD"></div>
+    <div class="handinfo" id="infoD"></div>
+  </div>
+
+  <div class="seat" id="seat1">
+    <div class="plate"><span class="av">🧢</span> Riku <span class="chipC" id="chips1">100</span><span class="res" id="res1"></span><span id="bub1"></span></div>
+    <div class="betplate" id="bet1"></div>
+    <div class="cards" id="cards1"></div>
+    <div class="handinfo" id="info1"></div>
+  </div>
+
+  <div class="seat" id="seat2">
+    <div class="plate"><span class="av">🎀</span> Mei <span class="chipC" id="chips2">100</span><span class="res" id="res2"></span><span id="bub2"></span></div>
+    <div class="betplate" id="bet2"></div>
+    <div class="cards" id="cards2"></div>
+    <div class="handinfo" id="info2"></div>
+  </div>
+
+  <div class="seat" id="seat0">
+    <div class="handinfo" id="info0"></div>
+    <div class="cards" id="cards0"></div>
+    <div class="betplate" id="bet0"></div>
+    <div class="plate"><span class="av">🫵</span> You <span class="chipC" id="chips">100</span><span class="res" id="res0"></span><span id="bub0"></span></div>
+  </div>
+</div>
+
+<div id="controls">
+  <span style="font-weight:bold;font-size:13px">Bet:</span>
+  <div class="chip c5" data-v="5">5</div>
+  <div class="chip c10 sel" data-v="10">10</div>
+  <div class="chip c25" data-v="25">25</div>
+  <div class="chip c50" data-v="50">50</div>
+  <button id="dealBtn" onclick="playRound()">🎴 Deal</button>
+  <div id="actions"></div>
+</div>
+<div id="msg"><div id="msgBox"></div></div>
+
+<script>
+const SUITS = ['♠','♥','♦','♣'];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const NAMES = ['You','Riku','Mei'];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const el = id => document.getElementById(id);
+
+let deck = [], hands = [], dealerHand = [], chips = [100,100,100];
+let bet = 10, bets = [10,10,10], roundN = 1, phase = 'bet';
+
+const cardVal = c => { const r = c % 13; return r === 0 ? 1 : r >= 9 ? 0 : r + 1; };
+const handVal = h => h.reduce((s,c) => s + cardVal(c), 0) % 10;
+
+function dengInfo(h) {
+  if (h.length === 2) {
+    const [a,b] = h;
+    if (a % 13 === b % 13) return { mult: 2, name: 'Pair ×2' };
+    if (Math.floor(a/13) === Math.floor(b/13)) return { mult: 2, name: 'Suited ×2' };
+    return { mult: 1, name: '' };
+  }
+  const ranks = h.map(c => c % 13).sort((x,y) => x - y);
+  const suits = h.map(c => Math.floor(c/13));
+  if (ranks[0] === ranks[1] && ranks[1] === ranks[2]) return { mult: 5, name: 'Three of a kind ×5' };
+  const straight = (ranks[1] === ranks[0]+1 && ranks[2] === ranks[1]+1) ||
+                   (ranks[0] === 0 && ranks[1] === 11 && ranks[2] === 12);
+  if (straight) return { mult: 3, name: 'Straight ×3' };
+  if (suits[0] === suits[1] && suits[1] === suits[2]) return { mult: 3, name: 'Flush ×3' };
+  return { mult: 1, name: '' };
+}
+const deng = h => dengInfo(h).mult;
+const isPok = h => h.length === 2 && handVal(h) >= 8;
+
+function cardEl(c, hidden, anim) {
+  const d = document.createElement('div');
+  if (hidden) { d.className = 'card back' + (anim ? ' ' + anim : ''); }
+  else {
+    const suit = SUITS[Math.floor(c/13)], rank = RANKS[c % 13];
+    d.className = 'card' + ((suit === '♥' || suit === '♦') ? ' red' : '') + (anim ? ' ' + anim : '');
+    d.innerHTML = '<div class="rank">' + rank + suit + '</div><div class="mid">' + suit + '</div><div class="rank tr">' + rank + suit + '</div>';
+  }
+  return d;
+}
+
+function describe(h) {
+  const v = handVal(h), di = dengInfo(h);
+  if (isPok(h)) return 'Value: ' + v + ' — POK ' + v + '!' + (di.mult > 1 ? ' ' + di.name : '');
+  return 'Value: ' + v + (di.name ? ' — ' + di.name : '');
+}
+
+function setStatus(t) { el('status').textContent = t; }
+function say(id, text) {
+  el('bub' + id).innerHTML = text ? '<span class="bubble">' + text + '</span>' : '';
+}
+function setActive(id) {
+  document.querySelectorAll('.seat').forEach(s => s.classList.remove('active'));
+  if (id !== null) el('seat' + id).classList.add('active');
+}
+function setRes(id, text, cls) {
+  const r = el('res' + id);
+  r.textContent = text; r.className = 'res' + (cls ? ' ' + cls : '');
+}
+
+// deal animation: card flies from the deck pile in the middle to the seat
+function addCard(id, c, hidden, anim) {
+  const container = el('cards' + id);
+  const card = cardEl(c, hidden, anim || 'dealt');
+  if (!anim) {
+    const deckR = el('deckPile').getBoundingClientRect();
+    const seatR = container.getBoundingClientRect();
+    card.style.setProperty('--fx', (deckR.left - seatR.left - container.children.length * 40) + 'px');
+    card.style.setProperty('--fy', (deckR.top - seatR.top) + 'px');
+  }
+  container.appendChild(card);
+}
+function updateChips() {
+  el('chips').textContent = chips[0];
+  el('chips1').textContent = chips[1];
+  el('chips2').textContent = chips[2];
+  el('round').textContent = roundN;
+}
+
+// responsive: scale whole table to fit screen
+function fit() {
+  // reserve space for header above the table and the controls bar below it
+  const headerH = el('tableWrap').getBoundingClientRect
+    ? el('tableWrap').offsetTop : 100;
+  const controlsH = 64;
+  const availW = window.innerWidth - 8;
+  const availH = Math.max(240, window.innerHeight - headerH - controlsH - 10);
+  const s = Math.min(availW / 980, availH / 560, 1);
+  el('tableWrap').style.transform = 'scale(' + s + ')';
+  // tableWrap keeps its layout height of 560px; pull the content below up
+  el('tableWrap').style.marginBottom = (-(1 - s) * 560) + 'px';
+}
+window.addEventListener('resize', fit);
+window.addEventListener('load', fit);
+
+document.querySelectorAll('.chip').forEach(ch => ch.onclick = () => {
+  if (phase !== 'bet') return;
+  document.querySelectorAll('.chip').forEach(x => x.classList.remove('sel'));
+  ch.classList.add('sel'); bet = +ch.dataset.v;
+});
+
+function waitChoice() {
+  return new Promise(resolve => {
+    const a = el('actions'); a.innerHTML = '';
+    const hitB = document.createElement('button'); hitB.className = 'hit'; hitB.textContent = '🎴 Draw';
+    const stayB = document.createElement('button'); stayB.className = 'stay'; stayB.textContent = '✋ Stay';
+    hitB.onclick = () => { a.innerHTML = ''; resolve('hit'); };
+    stayB.onclick = () => { a.innerHTML = ''; resolve('stay'); };
+    a.appendChild(hitB); a.appendChild(stayB);
+  });
+}
+
+async function playRound() {
+  if (phase !== 'bet') return;
+  if (chips[0] < bet) { setStatus('Not enough chips for that bet!'); return; }
+  phase = 'play';
+  el('dealBtn').disabled = true;
+
+  ['D','0','1','2'].forEach(i => { el('cards'+i).innerHTML=''; el('info'+i).textContent=''; setRes(i,''); say(i,''); });
+
+  deck = [...Array(52).keys()];
+  for (let i = deck.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [deck[i],deck[j]] = [deck[j],deck[i]]; }
+  hands = [[],[],[]]; dealerHand = [];
+  bets = [bet, 5 + 5*Math.floor(Math.random()*3), 5 + 5*Math.floor(Math.random()*3)];
+  bets[1] = Math.min(bets[1], chips[1]); bets[2] = Math.min(bets[2], chips[2]);
+  for (let i = 0; i < 3; i++) el('bet' + i).textContent = 'bet: ' + bets[i];
+
+  el('feltHint').style.display = 'none';
+  setStatus('Dealing…');
+  for (let pass = 0; pass < 2; pass++) {
+    for (const i of [0,1,2]) {
+      const c = deck.pop(); hands[i].push(c);
+      addCard(i, c, i !== 0);
+      await sleep(280);
+    }
+    const c = deck.pop(); dealerHand.push(c);
+    addCard('D', c, true);
+    await sleep(280);
+  }
+  el('info0').textContent = describe(hands[0]);
+
+  if (isPok(dealerHand)) {
+    setActive('D'); say('D', 'Pok!');
+    setStatus('Dealer flips immediately — Pok!');
+    await sleep(900);
+    await showdown();
+    return;
+  }
+
+  // --- your turn ---
+  setActive(0);
+  if (isPok(hands[0])) {
+    say(0, 'POK ' + handVal(hands[0]) + '! 🎉');
+    setStatus('You have Pok — automatic stand!');
+    await sleep(1100);
+  } else {
+    setStatus('Your turn: draw a third card or stay?');
+    const choice = await waitChoice();
+    if (choice === 'hit') {
+      const c = deck.pop(); hands[0].push(c);
+      addCard(0, c, false);
+      el('info0').textContent = describe(hands[0]);
+      say(0, 'Draw!');
+    } else say(0, 'Stay.');
+    await sleep(800);
+  }
+  say(0, '');
+
+  // --- bot turns ---
+  for (const i of [1,2]) {
+    setActive(i);
+    setStatus(NAMES[i] + ' is thinking…');
+    say(i, '🤔');
+    await sleep(900 + Math.random()*700);
+    if (isPok(hands[i])) {
+      say(i, 'Pok!'); setStatus(NAMES[i] + ' has Pok and stands!');
+    } else if (handVal(hands[i]) <= 4) {
+      const c = deck.pop(); hands[i].push(c);
+      addCard(i, c, true);
+      say(i, 'Draw!'); setStatus(NAMES[i] + ' draws a card.');
+    } else {
+      say(i, 'Stay.'); setStatus(NAMES[i] + ' stays.');
+    }
+    await sleep(900);
+    say(i, '');
+  }
+
+  // --- dealer's turn ---
+  setActive('D');
+  setStatus("Dealer's turn — flipping cards…");
+  await sleep(600);
+  el('cardsD').innerHTML = '';
+  addCard('D', dealerHand[0], false, 'flip');
+  await sleep(650);
+  addCard('D', dealerHand[1], false, 'flip');
+  el('infoD').textContent = describe(dealerHand);
+  await sleep(800);
+  if (!isPok(dealerHand) && handVal(dealerHand) <= 4) {
+    say('D', 'Draw!');
+    setStatus('Dealer draws a third card…');
+    await sleep(700);
+    const c = deck.pop(); dealerHand.push(c);
+    addCard('D', c, false, 'flip');
+    el('infoD').textContent = describe(dealerHand);
+    await sleep(700);
+  } else {
+    say('D', 'Stay.');
+    await sleep(700);
+  }
+  say('D', '');
+  await showdown();
+}
+
+async function showdown() {
+  setStatus('Showdown!');
+  setActive(null);
+  el('cardsD').innerHTML = '';
+  dealerHand.forEach(c => addCard('D', c, false, 'flip'));
+  el('infoD').textContent = describe(dealerHand);
+  const dv = handVal(dealerHand), dd = deng(dealerHand), dPok = isPok(dealerHand);
+  setRes('D', dv + (dPok ? ' POK!' : '') + (dd > 1 ? ' ×' + dd : ''), 't');
+  await sleep(800);
+
+  for (let i = 0; i < 3; i++) {
+    setActive(i);
+    if (i > 0) {
+      el('cards' + i).innerHTML = '';
+      hands[i].forEach(c => addCard(i, c, false, 'flip'));
+      el('info' + i).textContent = describe(hands[i]);
+      await sleep(700);
+    }
+    const pv = handVal(hands[i]), pd = deng(hands[i]), pPok = isPok(hands[i]);
+    let delta = 0;
+    const playerBeats = (pPok && !dPok) || (pv > dv && pPok === dPok);
+    const dealerBeats = (dPok && !pPok) || (dv > pv && pPok === dPok);
+    if (playerBeats) delta = bets[i] * pd;
+    else if (dealerBeats) delta = -bets[i] * dd;
+    chips[i] += delta;
+    setRes(i, delta > 0 ? 'WIN +' + delta : delta < 0 ? 'LOSE ' + delta : 'TIE',
+           delta > 0 ? 'w' : delta < 0 ? 'l' : 't');
+    setStatus(NAMES[i] + ': ' + (delta > 0 ? 'wins +' + delta : delta < 0 ? 'loses ' + delta : 'tie') +
+              '  (' + pv + (pPok?' Pok':'') + ' vs ' + dv + (dPok?' Pok':'') + ')');
+    updateChips();
+    await sleep(1000);
+  }
+  setActive(null);
+  phase = 'done';
+  setStatus('Round over!');
+  const a = el('actions');
+  const b = document.createElement('button');
+  if (chips[0] <= 0) {
+    b.textContent = '💸 Restart';
+    b.onclick = () => { chips = [100,100,100]; roundN = 0; nextRound(); };
+  } else {
+    b.textContent = '▶️ Next Round';
+    b.onclick = nextRound;
+  }
+  a.appendChild(b);
+}
+
+function nextRound() {
+  roundN++; phase = 'bet';
+  if (chips[1] <= 0) chips[1] = 100; if (chips[2] <= 0) chips[2] = 100;
+  updateChips();
+  el('dealBtn').disabled = false;
+  el('actions').innerHTML = '';
+  ['D','0','1','2'].forEach(i => { el('cards'+i).innerHTML=''; el('info'+i).textContent=''; setRes(i,''); say(i,''); });
+  document.querySelectorAll('.seat').forEach(s => s.classList.remove('active'));
+  for (let i = 0; i < 3; i++) el('bet' + i).textContent = '';
+  el('feltHint').style.display = '';
+  setStatus('Choose your bet and press Deal!');
+}
+
+function showRules() {
+  const box = el('msgBox');
+  box.innerHTML = '<h2>📖 Pok Deng Rules</h2><div style="text-align:left;font-size:14px;line-height:1.7">' +
+  '<p><b>Goal:</b> get a hand value closer to 9 than the Dealer. Everyone plays against the Dealer only.</p>' +
+  '<p><b>Value:</b> sum of cards, <b>mod 10</b> (only last digit counts). A=1, 2–9 face value, 10/J/Q/K=0.</p>' +
+  '<p><b>Pok:</b> 8 or 9 on your first two cards — instant stand, beats any non-Pok hand!</p>' +
+  '<p><b>Turn order:</b> cards are dealt around the table, then You → Riku → Mei each draw or stay, then the Dealer flips and plays last.</p>' +
+  '<p><b>Deng (payout multipliers):</b><br>· 2 cards, pair or same suit → <b>×2</b><br>· 3 cards, flush or straight → <b>×3</b><br>· three of a kind → <b>×5</b></p>' +
+  '<p><b>Payout:</b> win → bet × your deng. Lose → bet × dealer deng. Tie → nothing changes.</p>' +
+  '<p style="color:#ffd45e"><b>Note:</b> chips are just points for fun — no real money here! 😊</p>' +
+  '</div><br><button onclick="document.getElementById(\'msg\').style.display=\'none\'">Close</button>';
+  el('msg').style.display = 'flex';
+}
+
+fit();
+setStatus('Choose your bet and press Deal!');
+updateChips();
+</script>
+</body>
+</html>
