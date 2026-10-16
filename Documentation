@@ -4,9 +4,7 @@
 ## 1. My Development Process
 
 During the development of my Thai poker game or Pok Deng, I used WebbGPT as a tool to help me understand and develop the code. Since the game involved many different systems and complex function like dealing cards, calculation the hand value, player decision making(draw or stay) and determined the winner which not only compare between me and the deal but also the other players. Which I found I way to understand a system before deep analyse the code and it properties.
-
-
-Instead of simply asking AI to generate the entire game, I used it to help me understand the program's structure and the purpose of different sections of code. One method I focused on was using a **flowchart to visualize the logic of the game**. This helped me break a complicated program into smaller steps and understand how the game moves from one stage to another.
+Which is asking AI to generate flowchart which is programming structure, which help us understand the structure of the game in this case. Additionally, I asked AI to generate the code but with comment of what does the line and the function mean.
 
 ## 2. How I Used AI and Improved My Results
 
@@ -18,84 +16,8 @@ I used these functions as examples to understand the difference between the over
 
 I also learned that AI-generated code should not automatically be assumed to be correct. I needed to examine the logic, compare the explanations with the actual code, and consider whether the program behaved as intended. This helped me approach AI as a learning assistant rather than a tool that should make every decision for me.
 
-## 3. Using a Flowchart to Understand the Code
 
-One of the most useful techniques I learned was converting the game's logic into a flowchart. A flowchart makes the sequence of actions and decisions easier to understand because it represents the program visually.
-
-For example, the main gameplay process can be represented as follows:
-
-```text
-          START GAME
-               |
-               v
-        Choose a bet
-               |
-               v
-       Press the DEAL button
-               |
-               v
-       Check available chips
-               |
-               v
-        Shuffle the deck
-               |
-               v
-       Deal the first cards
-               |
-               v
-       Check for dealer Pok
-               |
-          +----+----+
-          |         |
-         Yes        No
-          |         |
-          v         v
-     Skip player   Player's turn
-       turns           |
-          |             v
-          |       Pok already?
-          |        +----+----+
-          |        |         |
-          |       Yes        No
-          |        |         |
-          |        |         v
-          |        |     Draw or Stay
-          |        |         |
-          +--------+---------+
-                   |
-                   v
-            Bot players' turns
-                   |
-                   v
-             Dealer's turn
-                   |
-                   v
-             Reveal all cards
-                   |
-                   v
-           Compare hand values
-                   |
-                   v
-          Calculate chip changes
-                   |
-                   v
-           Update the scoreboard
-                   |
-                   v
-             More chips left?
-              +----+----+
-              |         |
-             Yes        No
-              |         |
-              v         v
-          Next round   Restart
-```
-
-This flowchart helped me understand that a program is not just a collection of individual instructions. The instructions must execute in the correct order, and decisions determine which part of the program runs next.
-
-I also learned that a flowchart can reveal the purpose of a function before I understand every line of its implementation. For example, I can understand that `showdown()` compares hands and updates chips without needing to memorize every JavaScript statement inside it.
-
-## 4. What I Learned About Software and Coding
+## 3. What I Learned About Software and Coding
 
 Through this project, I deepened my understanding of several programming concepts.
 
@@ -107,7 +29,7 @@ Third, I developed a better understanding of **conditional statements and decisi
 
 Finally, I learned about **asynchronous programming**. The use of `async`, `await`, and `sleep()` allows the game to pause between actions, creating animations and making the gameplay feel more natural. This showed me that programming involves not only calculating correct results but also controlling the timing and sequence of events.
 
-## 5. How I Might Approach Software Development in the Future
+## 4. How I Might Approach Software Development in the Future
 
 In the future, I would approach software development in a more structured way. Before writing code, I would identify the main features of the program and create a flowchart showing how users interact with it and how the program responds.
 
