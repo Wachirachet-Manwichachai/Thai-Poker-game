@@ -1,5 +1,5 @@
 # Thai-Poker-game
-#Autopsy
+# Autopsy
 # Size
 In my code instead of using HTML <canvas> element. Instead, it uses different HTML elements like <div> to disply the game table, cards, chips, and button
 # Variables
