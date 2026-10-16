@@ -39,8 +39,8 @@
   /* ============ SEATS ============ */
   .seat { position: absolute; width: 230px; text-align: center; }
   #seatD { left: 50%; top: 30px; transform: translateX(-50%); }
-  #seat1 { right: 8px; top: 205px; }     /* Riku right */
-  #seat2 { left: 8px;  top: 205px; }     /* Mei left  */
+  #seat1 { right: 8px; top: 205px; }     /* Somchai right */
+  #seat2 { left: 8px;  top: 205px; }     /* Nok left  */
   #seat0 { left: 50%; bottom: 10px; transform: translateX(-50%); }
 
   .plate { display: inline-flex; gap: 8px; align-items: center; background: rgba(0,0,0,.55); border: 2px solid rgba(255,212,94,.35);
@@ -91,6 +91,22 @@
   #status { text-align: center; font-size: 14px; min-height: 19px; font-weight: bold; text-shadow: 0 1px 3px #000; z-index: 5; }
   #msg { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.75); z-index: 99; }
   #msgBox { background: #2a1409; border: 2px solid #e8b84b; border-radius: 14px; padding: 22px 28px; text-align: center; max-width: 560px; max-height: 85vh; overflow: auto; }
+
+  /* ============ TUTORIAL ============ */
+  #msgBox.wide { max-width: 720px; }
+  .tut-tabs { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .tut-tabs button { padding: 5px 12px; font-size: 13px; }
+  .tut-tabs button.on { background: #fff; }
+  .tut-row { display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,.07); border-radius: 10px;
+    padding: 8px 12px; margin: 8px 0; text-align: left; }
+  .tut-cards { display: flex; flex-shrink: 0; }
+  .tut-cards .card { width: 44px; height: 62px; margin: 0 -5px; padding: 3px 5px; }
+  .tut-cards .card .rank { font-size: 13px; } .tut-cards .card .mid { font-size: 18px; }
+  .tut-txt b { color: #ffd45e; }
+  .tut-txt { font-size: 13px; line-height: 1.5; }
+  .tut-badge { flex-shrink: 0; min-width: 52px; text-align: center; font-weight: bold; font-size: 15px;
+    background: rgba(255,212,94,.15); border: 1px solid rgba(255,212,94,.5); color: #ffd45e; border-radius: 8px; padding: 6px 8px; }
+  .tut-badge.good { background: rgba(102,187,106,.18); border-color: #66bb6a; color: #8aff9e; }
 </style>
 </head>
 <body>
@@ -98,6 +114,7 @@
 <div id="topbar">
   <span>Round: <b id="round">1</b></span>
   <button onclick="showRules()">❓ Rules</button>
+  <button onclick="showTutorial()">📚 Tutorial</button>
 </div>
 <div id="status"></div>
 
@@ -113,14 +130,14 @@
   </div>
 
   <div class="seat" id="seat1">
-    <div class="plate"><span class="av">🧢</span> Riku <span class="chipC" id="chips1">100</span><span class="res" id="res1"></span><span id="bub1"></span></div>
+    <div class="plate"><span class="av">🧢</span> Somchai <span class="chipC" id="chips1">100</span><span class="res" id="res1"></span><span id="bub1"></span></div>
     <div class="betplate" id="bet1"></div>
     <div class="cards" id="cards1"></div>
     <div class="handinfo" id="info1"></div>
   </div>
 
   <div class="seat" id="seat2">
-    <div class="plate"><span class="av">🎀</span> Mei <span class="chipC" id="chips2">100</span><span class="res" id="res2"></span><span id="bub2"></span></div>
+    <div class="plate"><span class="av">🦜</span> Nok <span class="chipC" id="chips2">100</span><span class="res" id="res2"></span><span id="bub2"></span></div>
     <div class="betplate" id="bet2"></div>
     <div class="cards" id="cards2"></div>
     <div class="handinfo" id="info2"></div>
@@ -148,7 +165,7 @@
 <script>
 const SUITS = ['♠','♥','♦','♣'];
 const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-const NAMES = ['You','Riku','Mei'];
+const NAMES = ['You','Somchai','Nok'];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const el = id => document.getElementById(id);
 
@@ -393,18 +410,23 @@ async function showdown() {
     await sleep(1000);
   }
   setActive(null);
-  phase = 'done';
-  setStatus('Round over!');
-  const a = el('actions');
-  const b = document.createElement('button');
+  // out of chips? offer a restart, otherwise go straight back to betting
   if (chips[0] <= 0) {
+    phase = 'done';
+    setStatus('💸 You are out of chips!');
+    const b = document.createElement('button');
     b.textContent = '💸 Restart';
     b.onclick = () => { chips = [100,100,100]; roundN = 0; nextRound(); };
-  } else {
-    b.textContent = '▶️ Next Round';
-    b.onclick = nextRound;
+    el('actions').appendChild(b);
+    return;
   }
-  a.appendChild(b);
+  roundN++;
+  if (chips[1] <= 0) chips[1] = 100;
+  if (chips[2] <= 0) chips[2] = 100;
+  updateChips();
+  phase = 'bet';
+  el('dealBtn').disabled = false;
+  setStatus('Round over — pick your bet and press Deal!');
 }
 
 function nextRound() {
@@ -420,13 +442,94 @@ function nextRound() {
   setStatus('Choose your bet and press Deal!');
 }
 
+const C = (suit, rank) => suit * 13 + rank;   // tutorial helper
+
+function tutRow(cards, badge, badgeCls, text) {
+  const row = document.createElement('div'); row.className = 'tut-row';
+  const cc = document.createElement('div'); cc.className = 'tut-cards';
+  cards.forEach(c => cc.appendChild(cardEl(c, false)));
+  const bd = document.createElement('div'); bd.className = 'tut-badge' + (badgeCls ? ' ' + badgeCls : '');
+  bd.textContent = badge;
+  const tx = document.createElement('div'); tx.className = 'tut-txt';
+  tx.innerHTML = text;
+  row.appendChild(cc); row.appendChild(bd); row.appendChild(tx);
+  return row;
+}
+
+function showTutorial(tab) {
+  tab = tab || 'values';
+  const box = el('msgBox');
+  box.className = 'wide';
+  box.innerHTML = '<h2>📚 How to Read Your Hand</h2>';
+
+  const tabs = document.createElement('div'); tabs.className = 'tut-tabs';
+  [['values','1️⃣ Card Values'],['pok','⭐ Pok'],['deng','💰 Deng Multipliers']].forEach(([id,label]) => {
+    const b = document.createElement('button');
+    b.textContent = label; if (id === tab) b.className = 'on';
+    b.onclick = () => showTutorial(id);
+    tabs.appendChild(b);
+  });
+  box.appendChild(tabs);
+
+  const body = document.createElement('div');
+
+  if (tab === 'values') {
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size:13px;margin-bottom:4px';
+    p.innerHTML = 'Your hand value is the <b>sum of your cards, keeping only the last digit</b> (mod 10). Closest to 9 wins!';
+    body.appendChild(p);
+    body.appendChild(tutRow([C(1,0)], '1', '', '<b>Ace = 1</b>'));
+    body.appendChild(tutRow([C(3,4)], '5', '', '<b>2–9 = face value</b> (a 5 is worth 5)'));
+    body.appendChild(tutRow([C(0,9), C(1,10), C(2,11), C(3,12)], '0', '', '<b>10, J, Q, K = 0</b> — they add nothing!'));
+    body.appendChild(tutRow([C(0,3), C(1,2)], '7', '', '4 + 3 = <b>7</b> — simple sum'));
+    body.appendChild(tutRow([C(2,6), C(3,7)], '5', '', '7 + 8 = 15 → keep last digit → <b>5</b>'));
+    body.appendChild(tutRow([C(0,12), C(1,8)], '9', 'good', 'K + 9 = 0 + 9 = <b>9, the best value!</b> Face cards make great partners.'));
+  }
+
+  if (tab === 'pok') {
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size:13px;margin-bottom:4px';
+    p.innerHTML = '<b>Pok</b> = your <b>first two cards</b> total 8 or 9. You stand automatically — and a Pok hand <b>beats any non-Pok hand</b>, even one worth more!';
+    body.appendChild(p);
+    body.appendChild(tutRow([C(1,3), C(0,4)], 'POK 9', 'good', '4 + 5 = <b>Pok 9</b> — the strongest hand in the game 🏆'));
+    body.appendChild(tutRow([C(2,12), C(3,7)], 'POK 8', 'good', 'K + 8 = 0 + 8 = <b>Pok 8</b> — still beats everything except Pok 9'));
+    body.appendChild(tutRow([C(0,8), C(1,8), C(3,1)], '0', '', '⚠️ 9 + 9 + 2 = 20 → value 0. <b>Three cards can never be Pok</b> — only your first two count!'));
+    body.appendChild(tutRow([C(1,4), C(1,3)], 'POK 9 ×2', 'good', 'Pok <b>and</b> same suit — instant win paying <b>double</b> 💎'));
+  }
+
+  if (tab === 'deng') {
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size:13px;margin-bottom:4px';
+    p.innerHTML = '<b>Deng</b> = payout multiplier. Win with one of these shapes and your bet is multiplied. Lose against a dealer deng and you pay more — so they cut both ways!';
+    body.appendChild(p);
+    body.appendChild(tutRow([C(0,6), C(1,6)], '×2', '', '<b>Pair</b> — two cards of the same rank (7♠ 7♥)'));
+    body.appendChild(tutRow([C(1,1), C(1,8)], '×2', '', '<b>Suited</b> — two cards of the same suit (both ♥)'));
+    body.appendChild(tutRow([C(0,3), C(1,4), C(2,5)], '×3', '', '<b>Straight</b> — three in a row (4-5-6), suits may differ'));
+    body.appendChild(tutRow([C(3,1), C(3,6), C(3,11)], '×3', '', '<b>Flush</b> — three cards of the same suit (all ♣)'));
+    body.appendChild(tutRow([C(0,5), C(1,5), C(2,5)], '×5', 'good', '<b>Three of a kind</b> — the rarest, pays five times your bet! 🎰'));
+    const note = document.createElement('p');
+    note.style.cssText = 'font-size:12px;margin-top:8px;color:#ffe0a3';
+    note.innerHTML = '💡 Tip: deng only matters if you <b>win</b> the value battle first — a ×5 hand worth 1 still loses to a plain hand worth 7!';
+    body.appendChild(note);
+  }
+
+  box.appendChild(body);
+  const close = document.createElement('button');
+  close.textContent = 'Close';
+  close.style.marginTop = '10px';
+  close.onclick = () => { el('msg').style.display = 'none'; box.className = ''; };
+  box.appendChild(close);
+  el('msg').style.display = 'flex';
+}
+
 function showRules() {
   const box = el('msgBox');
+  box.className = '';
   box.innerHTML = '<h2>📖 Pok Deng Rules</h2><div style="text-align:left;font-size:14px;line-height:1.7">' +
   '<p><b>Goal:</b> get a hand value closer to 9 than the Dealer. Everyone plays against the Dealer only.</p>' +
   '<p><b>Value:</b> sum of cards, <b>mod 10</b> (only last digit counts). A=1, 2–9 face value, 10/J/Q/K=0.</p>' +
   '<p><b>Pok:</b> 8 or 9 on your first two cards — instant stand, beats any non-Pok hand!</p>' +
-  '<p><b>Turn order:</b> cards are dealt around the table, then You → Riku → Mei each draw or stay, then the Dealer flips and plays last.</p>' +
+  '<p><b>Turn order:</b> cards are dealt around the table, then You → Somchai → Nok each draw or stay, then the Dealer flips and plays last.</p>' +
   '<p><b>Deng (payout multipliers):</b><br>· 2 cards, pair or same suit → <b>×2</b><br>· 3 cards, flush or straight → <b>×3</b><br>· three of a kind → <b>×5</b></p>' +
   '<p><b>Payout:</b> win → bet × your deng. Lose → bet × dealer deng. Tie → nothing changes.</p>' +
   '<p style="color:#ffd45e"><b>Note:</b> chips are just points for fun — no real money here! 😊</p>' +
