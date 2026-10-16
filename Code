@@ -1,24 +1,42 @@
+<!-- Tells the browser: "this is a modern HTML5 page". -->
 <!DOCTYPE html>
+<!-- Root element that wraps the whole page. lang="en" helps translators and screen readers. -->
 <html lang="en">
+<!-- HEAD = information ABOUT the page (nothing here is drawn on screen except through CSS). -->
 <head>
+<!-- UTF-8 lets the page show Thai text, emoji and the card symbols correctly. -->
 <meta charset="UTF-8">
+<!-- Makes the page fit properly on phones and small screens. -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- The text shown on the browser tab. -->
 <title>Pok Deng (ป๊อกเด้ง)</title>
+<!-- CSS starts here. CSS controls how everything LOOKS (colors, sizes, positions). -->
 <style>
+  /* RESET for every element (*): remove default spacing; box-sizing makes width include padding and border. */
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Whole-page look: font, dark wood background gradient, white text, content stacked in one centered column. */
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a0d08 radial-gradient(ellipse at 50% 0%, #3a1f12 0%, #140a06 70%);
     min-height: 100vh; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 6px; user-select: none; overflow-x: hidden; overflow-y: auto; }
+  /* Style of the big title at the top. */
   h1 { font-size: 1.25em; margin: 2px 0; text-shadow: 0 2px 4px rgba(0,0,0,.6); }
+  /* The small bar holding the round number and the Rules/Tutorial buttons (#id = one specific element). */
   #topbar { display: flex; gap: 14px; align-items: center; background: rgba(0,0,0,.45); padding: 4px 14px; border-radius: 8px; font-size: 13px; flex-wrap: wrap; justify-content: center; z-index: 5; }
+  /* Bold numbers inside the top bar are shown in gold. */
   #topbar b { color: #ffd45e; }
+  /* Default look of ALL buttons: gold, rounded, with a shadow. */
   button { background: #e8b84b; color: #3a2a00; border: none; border-radius: 8px; padding: 7px 15px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,.4); margin: 2px; }
+  /* Lighter gold while the mouse is over a button. */
   button:hover { background: #ffd066; }
+  /* A disabled button (e.g. Deal during a round) is faded and not clickable-looking. */
   button:disabled { opacity: .4; cursor: default; }
+  /* Special colors: Draw button = blue, Stay button = green. */
   button.hit { background: #4fc3f7; } button.stay { background: #81c784; }
 
   /* ============ THE TABLE ============ */
+  /* The box that holds the whole table. position: relative lets seats be placed inside it with absolute positions. */
   #tableWrap { position: relative; width: 980px; max-width: 100vw; height: 560px; margin-top: 4px;
     transform-origin: top center; }
+  /* The green oval table: centered, rounded with border-radius, felt gradient, wooden border, and inner shadows for depth. */
   #felt { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
     width: 920px; height: 520px; border-radius: 50% / 46%;
     background: radial-gradient(ellipse at 50% 38%, #2e8b57 0%, #1d6a40 55%, #14502f 100%);
@@ -26,505 +44,899 @@
     box-shadow: inset 0 0 60px rgba(0,0,0,.55), 0 18px 40px rgba(0,0,0,.65),
                 inset 0 4px 10px rgba(255,255,255,.08);
   }
+  /* ::before adds a decorative thin gold line inside the table edge (no extra HTML needed). */
   #felt::before { content: ''; position: absolute; inset: 26px; border: 2px solid rgba(255,220,130,.25); border-radius: 50% / 46%; }
+  /* The faint "POK DENG" logo and hint text in the middle of the felt; pointer-events: none lets clicks pass through it. */
   #feltLogo { position: absolute; left: 50%; top: 40%; transform: translate(-50%,-50%); text-align: center;
     color: rgba(255,255,255,.14); font-weight: bold; font-size: 26px; letter-spacing: 3px; pointer-events: none; }
 
   /* deck in the middle */
+  /* The deck in the middle of the table (the spot cards fly out from). */
   #deckPile { position: absolute; left: 50%; top: 52%; transform: translate(-50%,-50%); width: 46px; height: 64px; }
+  /* The two card-backs that make up the deck pile are stacked on top of each other. */
   #deckPile .card { position: absolute; width: 46px; height: 64px; }
+  /* First card in the pile: shifted 3px. */
   #deckPile .card:nth-child(1) { top: 3px; left: 3px; }
+  /* Second card: shifted 1.5px, which fakes a thick stack. */
   #deckPile .card:nth-child(2) { top: 1.5px; left: 1.5px; }
 
   /* ============ SEATS ============ */
+  /* Every player seat is placed with absolute coordinates inside #tableWrap. */
   .seat { position: absolute; width: 230px; text-align: center; }
+  /* Dealer seat: top-center. */
   #seatD { left: 50%; top: 30px; transform: translateX(-50%); }
+  /* Somchai: right side of the table. */
   #seat1 { right: 8px; top: 205px; }     /* Somchai right */
+  /* Nok: left side of the table. */
   #seat2 { left: 8px;  top: 205px; }     /* Nok left  */
+  /* You: bottom-center (closest to the viewer). */
   #seat0 { left: 50%; bottom: 10px; transform: translateX(-50%); }
 
+  /* The rounded name tag (avatar + name + chips) shown at each seat. */
   .plate { display: inline-flex; gap: 8px; align-items: center; background: rgba(0,0,0,.55); border: 2px solid rgba(255,212,94,.35);
     border-radius: 20px; padding: 3px 14px; font-size: 13px; font-weight: bold; position: relative; }
+  /* Whoever's turn it is gets a gold glowing name tag. */
   .seat.active .plate { border-color: #ffd45e; box-shadow: 0 0 16px rgba(255,212,94,.6); }
+  /* Avatar emoji size. */
   .plate .av { font-size: 17px; }
+  /* The chip count shown on a name tag is light green. */
   .plate .chipC { color: #9fd8c0; font-weight: normal; }
+  /* The WIN / LOSE / TIE badge floating above a name tag. */
   .res { position: absolute; left: 50%; transform: translateX(-50%); top: -26px; font-weight: bold; font-size: 14px;
     background: rgba(0,0,0,.7); border-radius: 10px; padding: 1px 10px; white-space: nowrap; }
+  /* Badge colors: w = win (green), l = lose (red), t = tie (gray). */
   .res.w { color: #8aff9e; } .res.l { color: #ff9e9e; } .res.t { color: #cfd8dc; }
+  /* White speech bubble ("Draw!", "Stay.", "Pok!") with a pop-in animation. */
   .bubble { position: absolute; left: 50%; transform: translateX(-50%); top: -52px; background: #fff; color: #333;
     border-radius: 12px; padding: 3px 12px; font-size: 12px; font-weight: bold; white-space: nowrap; animation: pop .25s ease; z-index: 8; }
+  /* The little triangle "tail" under the speech bubble, made from CSS borders. */
   .bubble::after { content:''; position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%);
     border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
+  /* Animation "pop": bubble starts small and transparent, grows to full size. */
   @keyframes pop { from { transform: translateX(-50%) scale(.5); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
 
+  /* The row that holds a player's cards. */
   .cards { display: flex; justify-content: center; min-height: 80px; margin-top: 6px; }
+  /* Small spacing tweak for the Dealer's cards. */
   #seatD .cards { margin-top: 8px; }
+  /* Spacing tweak for your cards (your name tag is below them). */
   #seat0 .cards { margin-top: 0; margin-bottom: 6px; }
+  /* The small text under the cards, e.g. "Value: 7 - Pair x2". */
   .handinfo { font-size: 12px; color: #ffe0a3; min-height: 15px; text-shadow: 0 1px 2px #000; }
 
   /* cards fanned on felt */
+  /* A playing card: white rectangle, rounded corners, shadow, rank in the corner. Negative side margin makes cards overlap like a fan. */
   .card { width: 54px; height: 76px; border-radius: 7px; background: #fff; color: #111; position: relative;
     box-shadow: 0 3px 7px rgba(0,0,0,.55); display: flex; flex-direction: column; justify-content: space-between;
     padding: 4px 6px; font-weight: bold; margin: 0 -7px; }
+  /* 1st card in a hand is tilted left... */
   .cards .card:nth-child(1) { transform: rotate(-7deg) translateY(3px); }
+  /* ...2nd card sits straight... */
   .cards .card:nth-child(2) { transform: rotate(0deg); }
+  /* ...3rd card is tilted right. Together they form a fan. */
   .cards .card:nth-child(3) { transform: rotate(7deg) translateY(3px); }
+  /* Cards that were just dealt play the "dealIn" animation. */
   .card.dealt { animation: dealIn .4s cubic-bezier(.2,.8,.3,1); }
+  /* Animation "dealIn": the card starts at the deck (offsets --fx / --fy set by JavaScript), rotated and small, then slides into place. */
   @keyframes dealIn { from { transform: translate(var(--fx,0px), var(--fy,-200px)) rotate(40deg) scale(.6); opacity: .3; } }
+  /* Cards that are being revealed play the "flipIn" animation. */
   .card.flip { animation: flipIn .4s ease; }
+  /* Animation "flipIn": starts edge-on (rotated 90 degrees) and turns to face you. */
   @keyframes flipIn { 0% { transform: rotateY(90deg); } }
+  /* The bottom-right rank is turned upside down, like a real playing card. */
   .card .tr { align-self: flex-end; transform: rotate(180deg); }
+  /* Size of the rank text such as "K♠". */
   .card .rank { font-size: 15px; line-height: 1.05; }
+  /* Size of the large suit symbol in the middle. */
   .card .mid { font-size: 23px; text-align: center; }
+  /* Hearts and diamonds are drawn in red. */
   .card.red { color: #c62828; }
+  /* Face-down card: red diagonal-stripe pattern with a white border. */
   .card.back { background: repeating-linear-gradient(45deg, #8c1f1f, #8c1f1f 6px, #a93a2e 6px, #a93a2e 12px); border: 3px solid #fff; }
 
+  /* The small gold text "bet: 10" near each seat. */
   .betplate { font-size: 12px; color: #ffd45e; min-height: 15px; text-shadow: 0 1px 2px #000; }
 
   /* ============ CONTROLS ============ */
+  /* The bottom control strip (bet chips + Deal + Draw/Stay buttons). */
   #controls { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 5; margin-top: 2px; }
+  /* A round casino chip button for choosing your bet. */
   .chip { width: 46px; height: 46px; border-radius: 50%; border: 4px dashed #fff; font-weight: bold; cursor: pointer;
     display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 3px 6px rgba(0,0,0,.5); color:#fff; transition: transform .15s; }
+  /* Each chip value has its own color. */
   .chip.c5 { background: #5c6bc0; } .chip.c10 { background: #26a69a; } .chip.c25 { background: #ef5350; } .chip.c50 { background: #7e57c2; }
+  /* The currently selected chip grows and gets a solid border. */
   .chip.sel { transform: scale(1.18); border-style: solid; }
+  /* Holds the Draw / Stay buttons while it is your turn. */
   #actions { min-height: 40px; display: flex; gap: 6px; align-items: center; justify-content: center; }
+  /* The bold message line that tells you what is happening. */
   #status { text-align: center; font-size: 14px; min-height: 19px; font-weight: bold; text-shadow: 0 1px 3px #000; z-index: 5; }
+  /* Full-screen dark overlay used for the Rules and Tutorial popups. It is hidden (display: none) until needed. */
   #msg { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.75); z-index: 99; }
+  /* The popup window itself, centered on the overlay. */
   #msgBox { background: #2a1409; border: 2px solid #e8b84b; border-radius: 14px; padding: 22px 28px; text-align: center; max-width: 560px; max-height: 85vh; overflow: auto; }
 
   /* ============ TUTORIAL ============ */
+  /* The Tutorial popup is wider than the Rules popup. */
   #msgBox.wide { max-width: 720px; }
+  /* Row of tab buttons at the top of the Tutorial. */
   .tut-tabs { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
+  /* Tab buttons are slightly smaller than normal buttons. */
   .tut-tabs button { padding: 5px 12px; font-size: 13px; }
+  /* The tab you are currently viewing is white. */
   .tut-tabs button.on { background: #fff; }
+  /* One example row in the Tutorial: cards + badge + explanation, side by side (flexbox). */
   .tut-row { display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,.07); border-radius: 10px;
     padding: 8px 12px; margin: 8px 0; text-align: left; }
+  /* Container for the example cards in a row. */
   .tut-cards { display: flex; flex-shrink: 0; }
+  /* Tutorial cards are smaller than table cards. */
   .tut-cards .card { width: 44px; height: 62px; margin: 0 -5px; padding: 3px 5px; }
+  /* Smaller text inside tutorial cards. */
   .tut-cards .card .rank { font-size: 13px; } .tut-cards .card .mid { font-size: 18px; }
+  /* Bold words in the explanation are gold. */
   .tut-txt b { color: #ffd45e; }
+  /* Explanation text size and line spacing. */
   .tut-txt { font-size: 13px; line-height: 1.5; }
+  /* The value label (e.g. "x2", "POK 9") shown in a gold box. */
   .tut-badge { flex-shrink: 0; min-width: 52px; text-align: center; font-weight: bold; font-size: 15px;
     background: rgba(255,212,94,.15); border: 1px solid rgba(255,212,94,.5); color: #ffd45e; border-radius: 8px; padding: 6px 8px; }
+  /* Green version of the badge for the best hands. */
   .tut-badge.good { background: rgba(102,187,106,.18); border-color: #66bb6a; color: #8aff9e; }
 </style>
+<!-- End of the HEAD section. -->
 </head>
+<!-- BODY = everything that is visible on the page. -->
 <body>
+<!-- Page title. -->
 <h1>🃏 Pok Deng (ป๊อกเด้ง)</h1>
+<!-- Top bar container. -->
 <div id="topbar">
+  <!-- Round counter. The number inside <b id="round"> is updated by updateChips(). -->
   <span>Round: <b id="round">1</b></span>
+  <!-- Clicking runs the JavaScript function showRules() (opens the rules popup). -->
   <button onclick="showRules()">❓ Rules</button>
+  <!-- Clicking runs showTutorial() (opens the card-combination tutorial). -->
   <button onclick="showTutorial()">📚 Tutorial</button>
 </div>
+<!-- Empty message line. JavaScript fills it using setStatus(). -->
 <div id="status"></div>
 
+<!-- Container for the entire table scene (felt, deck and all 4 seats). -->
 <div id="tableWrap">
+  <!-- The green oval table (styled entirely by CSS). -->
   <div id="felt"></div>
+  <!-- Logo text on the felt. The span with id="feltHint" is the hint that is hidden once cards are dealt. -->
   <div id="feltLogo">POK DENG<br><span style="font-size:14px">ป๊อกเด้ง</span><br><span id="feltHint" style="font-size:15px;color:rgba(255,255,255,.45);letter-spacing:1px">pick a bet & press DEAL ⬇</span></div>
+  <!-- Two face-down cards = the deck in the middle. -->
   <div id="deckPile"><div class="card back"></div><div class="card back"></div></div>
 
+  <!-- DEALER seat. -->
   <div class="seat" id="seatD">
+    <!-- Dealer name tag. "res" = result badge, "bubD" = place for the speech bubble. -->
     <div class="plate"><span class="av">🎩</span> Dealer <span class="res" id="resD"></span><span id="bubD"></span></div>
+    <!-- The Dealer's cards are inserted here by JavaScript. -->
     <div class="cards" id="cardsD"></div>
+    <!-- Text under the Dealer's cards (value and deng). -->
     <div class="handinfo" id="infoD"></div>
   </div>
 
+  <!-- SOMCHAI seat (bot 1). -->
   <div class="seat" id="seat1">
+    <!-- Somchai name tag: avatar, name, chip count (id chips1), result badge and speech bubble. -->
     <div class="plate"><span class="av">🧢</span> Somchai <span class="chipC" id="chips1">100</span><span class="res" id="res1"></span><span id="bub1"></span></div>
+    <!-- Shows Somchai's bet this round. -->
     <div class="betplate" id="bet1"></div>
+    <!-- Somchai's cards go here. -->
     <div class="cards" id="cards1"></div>
+    <!-- Somchai's hand description (shown at showdown). -->
     <div class="handinfo" id="info1"></div>
   </div>
 
+  <!-- NOK seat (bot 2) - same structure as Somchai's seat. -->
   <div class="seat" id="seat2">
+    <!-- Nok name tag (chips2). -->
     <div class="plate"><span class="av">🦜</span> Nok <span class="chipC" id="chips2">100</span><span class="res" id="res2"></span><span id="bub2"></span></div>
+    <!-- Nok's bet. -->
     <div class="betplate" id="bet2"></div>
+    <!-- Nok's cards. -->
     <div class="cards" id="cards2"></div>
+    <!-- Nok's hand description. -->
     <div class="handinfo" id="info2"></div>
   </div>
 
+  <!-- YOUR seat. Order is reversed (cards above the name tag) because you sit at the bottom. -->
   <div class="seat" id="seat0">
+    <!-- Your hand description, e.g. "Value: 9 - POK 9!". Visible during play so you know your hand. -->
     <div class="handinfo" id="info0"></div>
+    <!-- Your cards (face up). -->
     <div class="cards" id="cards0"></div>
+    <!-- Your bet. -->
     <div class="betplate" id="bet0"></div>
+    <!-- Your name tag. id="chips" is YOUR chip count. -->
     <div class="plate"><span class="av">🫵</span> You <span class="chipC" id="chips">100</span><span class="res" id="res0"></span><span id="bub0"></span></div>
   </div>
 </div>
 
+<!-- Control strip below the table. -->
 <div id="controls">
+  <!-- The word "Bet:". -->
   <span style="font-weight:bold;font-size:13px">Bet:</span>
+  <!-- Chip worth 5. data-v stores the number so JavaScript can read it. -->
   <div class="chip c5" data-v="5">5</div>
+  <!-- Chip worth 10, selected by default (class "sel"). -->
   <div class="chip c10 sel" data-v="10">10</div>
+  <!-- Chip worth 25. -->
   <div class="chip c25" data-v="25">25</div>
+  <!-- Chip worth 50. -->
   <div class="chip c50" data-v="50">50</div>
+  <!-- Deal button: runs playRound() to start a round. -->
   <button id="dealBtn" onclick="playRound()">🎴 Deal</button>
+  <!-- Draw / Stay buttons are added here during your turn. -->
   <div id="actions"></div>
 </div>
+<!-- Hidden popup overlay used by Rules and Tutorial; #msgBox is filled with content by JavaScript. -->
 <div id="msg"><div id="msgBox"></div></div>
 
+<!-- JAVASCRIPT starts here. JavaScript is the game LOGIC: rules, turns, animation and payouts. -->
 <script>
+// =================== DATA & HELPERS ===================
+// The 4 suits. A card id (0-51) = suit*13 + rank, so the suit is Math.floor(id/13).
 const SUITS = ['♠','♥','♦','♣'];
+// The 13 ranks. A card's rank index is id % 13 (0 = Ace ... 12 = King).
 const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+// Display names of the 3 players: index 0 = you, 1 = Somchai, 2 = Nok.
 const NAMES = ['You','Somchai','Nok'];
+// sleep(ms) returns a Promise that finishes after ms milliseconds. "await sleep(500)" pauses the game for half a second.
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Short helper: el('status') is the same as document.getElementById('status').
 const el = id => document.getElementById(id);
 
+// GAME STATE: deck = shuffled card ids; hands = [you, Somchai, Nok] card arrays; dealerHand; chips = money of [you, Somchai, Nok].
 let deck = [], hands = [], dealerHand = [], chips = [100,100,100];
+// bet = chip you selected; bets = real bets this round; roundN = round number; phase = 'bet' | 'play' | 'done'.
 let bet = 10, bets = [10,10,10], roundN = 1, phase = 'bet';
 
+// Value of one card: Ace = 1, 2-9 = face value, 10/J/Q/K = 0 (rank 9..12). Ternary: (r===0) ? 1 : (r>=9) ? 0 : r+1.
 const cardVal = c => { const r = c % 13; return r === 0 ? 1 : r >= 9 ? 0 : r + 1; };
+// Hand value = add all card values, then % 10 keeps only the last digit (15 -> 5).
 const handVal = h => h.reduce((s,c) => s + cardVal(c), 0) % 10;
 
+// DENG = payout multiplier. Returns { mult: number, name: text } for a hand h.
 function dengInfo(h) {
+  // Two-card hands can only be Pair or Suited.
   if (h.length === 2) {
+    // Destructuring: a = first card id, b = second card id.
     const [a,b] = h;
+    // Same rank (id % 13) = a Pair, x2.
     if (a % 13 === b % 13) return { mult: 2, name: 'Pair ×2' };
+    // Same suit (Math.floor(id/13)) = Suited, x2.
     if (Math.floor(a/13) === Math.floor(b/13)) return { mult: 2, name: 'Suited ×2' };
+    // Neither pair nor suited: no bonus (x1).
     return { mult: 1, name: '' };
   }
+  // Three-card hand: list the ranks and sort low to high (needed to detect straights).
   const ranks = h.map(c => c % 13).sort((x,y) => x - y);
+  // List the suit of each card (needed to detect flushes).
   const suits = h.map(c => Math.floor(c/13));
+  // All three ranks equal = Three of a kind, x5 (the best deng).
   if (ranks[0] === ranks[1] && ranks[1] === ranks[2]) return { mult: 5, name: 'Three of a kind ×5' };
+  // Straight = three consecutive ranks (4-5-6); the second line also allows Q-K-A.
   const straight = (ranks[1] === ranks[0]+1 && ranks[2] === ranks[1]+1) ||
                    (ranks[0] === 0 && ranks[1] === 11 && ranks[2] === 12);
+  // Straight pays x3.
   if (straight) return { mult: 3, name: 'Straight ×3' };
+  // All three suits equal = Flush, x3.
   if (suits[0] === suits[1] && suits[1] === suits[2]) return { mult: 3, name: 'Flush ×3' };
+  // No special shape: x1.
   return { mult: 1, name: '' };
 }
+// Shortcut that returns only the multiplier number.
 const deng = h => dengInfo(h).mult;
+// POK = exactly 2 cards and value 8 or 9. A third card can never make a Pok.
 const isPok = h => h.length === 2 && handVal(h) >= 8;
 
+// =================== DRAWING ===================
+// cardEl builds the HTML element of one card. c = card id, hidden = face-down?, anim = optional animation class.
 function cardEl(c, hidden, anim) {
+  // Create an empty <div> in memory (not on screen yet).
   const d = document.createElement('div');
+  // Face-down card: just use the "back" styling.
   if (hidden) { d.className = 'card back' + (anim ? ' ' + anim : ''); }
+  // Face-up card: work out its suit and rank, then build its look.
   else {
+    // Look up the suit symbol and rank text from the card id.
     const suit = SUITS[Math.floor(c/13)], rank = RANKS[c % 13];
+    // Add class "card"; add "red" for hearts/diamonds; add the animation class if given.
     d.className = 'card' + ((suit === '♥' || suit === '♦') ? ' red' : '') + (anim ? ' ' + anim : '');
+    // Fill the card with rank+suit in the top-left, big suit in the middle, rank+suit bottom-right.
     d.innerHTML = '<div class="rank">' + rank + suit + '</div><div class="mid">' + suit + '</div><div class="rank tr">' + rank + suit + '</div>';
   }
+  // Give the finished card element back to the caller.
   return d;
 }
 
+// describe returns text like "Value: 7 - Pair x2" for the line under the cards.
 function describe(h) {
+  // v = hand value, di = deng information.
   const v = handVal(h), di = dengInfo(h);
+  // Pok hands get a special message.
   if (isPok(h)) return 'Value: ' + v + ' — POK ' + v + '!' + (di.mult > 1 ? ' ' + di.name : '');
+  // Normal hands: show the value and, if there is one, the deng name.
   return 'Value: ' + v + (di.name ? ' — ' + di.name : '');
 }
 
+// Writes a message into the status line.
 function setStatus(t) { el('status').textContent = t; }
+// Shows (or clears when text is empty) a speech bubble at seat id.
 function say(id, text) {
+  // If text exists, put a bubble span there; otherwise empty string removes it.
   el('bub' + id).innerHTML = text ? '<span class="bubble">' + text + '</span>' : '';
 }
+// Highlights the seat whose turn it is (gold glow).
 function setActive(id) {
+  // Remove the glow from every seat first...
   document.querySelectorAll('.seat').forEach(s => s.classList.remove('active'));
+  // ...then add it to the chosen seat. Passing null means "nobody is active".
   if (id !== null) el('seat' + id).classList.add('active');
 }
+// Sets the WIN/LOSE/TIE badge of a seat. cls = color class (w, l, t).
 function setRes(id, text, cls) {
+  // Find that seat's badge element.
   const r = el('res' + id);
+  // Set its text and its CSS classes together.
   r.textContent = text; r.className = 'res' + (cls ? ' ' + cls : '');
 }
 
 // deal animation: card flies from the deck pile in the middle to the seat
+// Puts card c into seat id's hand. If no anim is given it uses the "dealt" flying animation from the deck.
 function addCard(id, c, hidden, anim) {
+  // The <div> that holds this seat's cards.
   const container = el('cards' + id);
+  // Build the card element ('dealt' is the default animation).
   const card = cardEl(c, hidden, anim || 'dealt');
+  // Only for dealing: compute where the deck is relative to this seat.
   if (!anim) {
+    // Screen rectangle of the deck pile.
     const deckR = el('deckPile').getBoundingClientRect();
+    // Screen rectangle of the seat's card row.
     const seatR = container.getBoundingClientRect();
+    // Horizontal distance from deck to seat, passed to CSS as variable --fx (used by @keyframes dealIn).
     card.style.setProperty('--fx', (deckR.left - seatR.left - container.children.length * 40) + 'px');
+    // Vertical distance from deck to seat -> CSS variable --fy.
     card.style.setProperty('--fy', (deckR.top - seatR.top) + 'px');
   }
+  // Finally put the card onto the table (this starts the animation).
   container.appendChild(card);
 }
+// Refreshes all on-screen numbers from the chips array.
 function updateChips() {
+  // Your chips.
   el('chips').textContent = chips[0];
+  // Somchai's chips.
   el('chips1').textContent = chips[1];
+  // Nok's chips.
   el('chips2').textContent = chips[2];
+  // Round number.
   el('round').textContent = roundN;
 }
 
 // responsive: scale whole table to fit screen
+// Scales the whole table so it fits any window size (this fixed the "cards off-screen" bug).
 function fit() {
   // reserve space for header above the table and the controls bar below it
+  // Space used above the table (title + top bar), measured from the table's top offset.
   const headerH = el('tableWrap').getBoundingClientRect
     ? el('tableWrap').offsetTop : 100;
+  // Space reserved for the bet/Deal controls below the table.
   const controlsH = 64;
+  // Usable width of the window.
   const availW = window.innerWidth - 8;
+  // Usable height of the window (never smaller than 240px).
   const availH = Math.max(240, window.innerHeight - headerH - controlsH - 10);
+  // Scale factor = whichever is smaller: fit-by-width, fit-by-height, or 1 (never enlarge).
   const s = Math.min(availW / 980, availH / 560, 1);
+  // Apply the scale to the table.
   el('tableWrap').style.transform = 'scale(' + s + ')';
   // tableWrap keeps its layout height of 560px; pull the content below up
+  // A scaled box keeps its old layout size, so pull the content below it upward.
   el('tableWrap').style.marginBottom = (-(1 - s) * 560) + 'px';
 }
+// Re-fit whenever the window is resized...
 window.addEventListener('resize', fit);
+// ...and once the page has fully loaded.
 window.addEventListener('load', fit);
 
+// =================== BET CHIPS ===================
+// Give every chip a click handler.
 document.querySelectorAll('.chip').forEach(ch => ch.onclick = () => {
+  // Ignore chip clicks unless we are in the betting phase.
   if (phase !== 'bet') return;
+  // Un-select all chips...
   document.querySelectorAll('.chip').forEach(x => x.classList.remove('sel'));
+  // ...select the clicked one and store its value (dataset.v, converted to a number with +).
   ch.classList.add('sel'); bet = +ch.dataset.v;
 });
 
+// Shows Draw / Stay buttons and WAITS until you click one. Returns 'hit' or 'stay'.
 function waitChoice() {
+  // A Promise is "a value that will arrive later". resolve(...) delivers it.
   return new Promise(resolve => {
+    // Get the actions area and empty it.
     const a = el('actions'); a.innerHTML = '';
+    // Create the blue Draw button.
     const hitB = document.createElement('button'); hitB.className = 'hit'; hitB.textContent = '🎴 Draw';
+    // Create the green Stay button.
     const stayB = document.createElement('button'); stayB.className = 'stay'; stayB.textContent = '✋ Stay';
+    // Clicking Draw: remove the buttons and deliver 'hit'.
     hitB.onclick = () => { a.innerHTML = ''; resolve('hit'); };
+    // Clicking Stay: remove the buttons and deliver 'stay'.
     stayB.onclick = () => { a.innerHTML = ''; resolve('stay'); };
+    // Show both buttons on screen.
     a.appendChild(hitB); a.appendChild(stayB);
   });
 }
 
+// =================== ONE FULL ROUND ===================
+// async lets this function use "await" to pause between steps.
 async function playRound() {
+  // Safety: do nothing if a round is already running.
   if (phase !== 'bet') return;
+  // Safety: you cannot bet more chips than you own.
   if (chips[0] < bet) { setStatus('Not enough chips for that bet!'); return; }
+  // Lock the game: round in progress.
   phase = 'play';
+  // Disable the Deal button so you cannot start two rounds.
   el('dealBtn').disabled = true;
 
+  // Clear the previous round from all four seats: cards, text, badge, bubble.
   ['D','0','1','2'].forEach(i => { el('cards'+i).innerHTML=''; el('info'+i).textContent=''; setRes(i,''); say(i,''); });
 
+  // Make a new deck: the numbers 0 to 51, one per card.
   deck = [...Array(52).keys()];
+  // Fisher-Yates SHUFFLE: walk backwards, swapping each card with a random earlier one.
   for (let i = deck.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [deck[i],deck[j]] = [deck[j],deck[i]]; }
+  // Start with empty hands for you, Somchai, Nok and the dealer.
   hands = [[],[],[]]; dealerHand = [];
+  // Your bet = the chip you chose; each bot bets a random 5, 10 or 15.
   bets = [bet, 5 + 5*Math.floor(Math.random()*3), 5 + 5*Math.floor(Math.random()*3)];
+  // A bot can never bet more chips than it has.
   bets[1] = Math.min(bets[1], chips[1]); bets[2] = Math.min(bets[2], chips[2]);
+  // Show each player's bet next to their seat.
   for (let i = 0; i < 3; i++) el('bet' + i).textContent = 'bet: ' + bets[i];
 
+  // Hide the "pick a bet and press DEAL" hint.
   el('feltHint').style.display = 'none';
+  // Tell the player what is happening.
   setStatus('Dealing…');
+  // DEALING: two passes around the table, like a real dealer (one card at a time).
   for (let pass = 0; pass < 2; pass++) {
+    // Deal to each player in order: you, Somchai, Nok.
     for (const i of [0,1,2]) {
+      // deck.pop() takes the top card; push() adds it to that player's hand.
       const c = deck.pop(); hands[i].push(c);
+      // Show it: face up only for you (i === 0); bots' cards are hidden.
       addCard(i, c, i !== 0);
+      // Short pause so you can watch each card land.
       await sleep(280);
     }
+    // The dealer gets a card too...
     const c = deck.pop(); dealerHand.push(c);
+    // ...always face down at this stage.
     addCard('D', c, true);
+    // Pause again.
     await sleep(280);
   }
+  // Show the value of your first two cards.
   el('info0').textContent = describe(hands[0]);
 
+  // RULE: if the Dealer has Pok, nobody gets to draw: go straight to showdown.
   if (isPok(dealerHand)) {
+    // Highlight the Dealer and show a "Pok!" bubble.
     setActive('D'); say('D', 'Pok!');
+    // Explain it in the status line.
     setStatus('Dealer flips immediately — Pok!');
+    // Dramatic pause.
     await sleep(900);
+    // Reveal all cards and pay out.
     await showdown();
+    // Stop here: the rest of the round is skipped.
     return;
   }
 
   // --- your turn ---
+  // -------- YOUR TURN --------
+  // Highlight your seat.
   setActive(0);
+  // If you have Pok, you must stand (no choice).
   if (isPok(hands[0])) {
+    // Show a bubble with your Pok value.
     say(0, 'POK ' + handVal(hands[0]) + '! 🎉');
+    // Status message.
     setStatus('You have Pok — automatic stand!');
+    // Pause so you can enjoy it.
     await sleep(1100);
+  // No Pok: you decide.
   } else {
+    // Ask the player.
     setStatus('Your turn: draw a third card or stay?');
+    // PAUSE HERE until you click Draw or Stay; the answer is stored in "choice".
     const choice = await waitChoice();
+    // You chose to draw a third card.
     if (choice === 'hit') {
+      // Take the top card into your hand.
       const c = deck.pop(); hands[0].push(c);
+      // Show it face up.
       addCard(0, c, false);
+      // Update your hand description with the new value.
       el('info0').textContent = describe(hands[0]);
+      // Speech bubble "Draw!".
       say(0, 'Draw!');
+    // Otherwise your bubble says "Stay.".
     } else say(0, 'Stay.');
+    // Pause.
     await sleep(800);
   }
+  // Remove your speech bubble.
   say(0, '');
 
   // --- bot turns ---
+  // -------- BOT TURNS --------
+  // Somchai (1) then Nok (2) take their turns with the same code.
   for (const i of [1,2]) {
+    // Highlight the bot whose turn it is.
     setActive(i);
+    // Show "Somchai is thinking..." (name looked up from NAMES).
     setStatus(NAMES[i] + ' is thinking…');
+    // Thinking bubble.
     say(i, '🤔');
+    // Wait 0.9-1.6 seconds so the bot feels human (random delay).
     await sleep(900 + Math.random()*700);
+    // BOT RULE 1: with Pok, stand.
     if (isPok(hands[i])) {
+      // Announce it.
       say(i, 'Pok!'); setStatus(NAMES[i] + ' has Pok and stands!');
+    // BOT RULE 2: value 0-4 is weak, so draw a card.
     } else if (handVal(hands[i]) <= 4) {
+      // Bot takes a card...
       const c = deck.pop(); hands[i].push(c);
+      // ...placed face down.
       addCard(i, c, true);
+      // Announce it.
       say(i, 'Draw!'); setStatus(NAMES[i] + ' draws a card.');
+    // BOT RULE 3: value 5-9 is decent, so stay.
     } else {
+      // Announce it.
       say(i, 'Stay.'); setStatus(NAMES[i] + ' stays.');
     }
+    // Pause so you can read the bubble.
     await sleep(900);
+    // Remove the bubble.
     say(i, '');
   }
 
   // --- dealer's turn ---
+  // -------- DEALER'S TURN --------
+  // Highlight the Dealer.
   setActive('D');
+  // Status message.
   setStatus("Dealer's turn — flipping cards…");
+  // Pause.
   await sleep(600);
+  // Remove the face-down cards so we can reveal them one by one.
   el('cardsD').innerHTML = '';
+  // Flip the Dealer's first card face up.
   addCard('D', dealerHand[0], false, 'flip');
+  // Suspense...
   await sleep(650);
+  // Flip the second card.
   addCard('D', dealerHand[1], false, 'flip');
+  // Show the Dealer's value.
   el('infoD').textContent = describe(dealerHand);
+  // Pause.
   await sleep(800);
+  // Dealer follows the bot rule: draw if value is 4 or less and no Pok.
   if (!isPok(dealerHand) && handVal(dealerHand) <= 4) {
+    // Announce it.
     say('D', 'Draw!');
+    // Status message.
     setStatus('Dealer draws a third card…');
+    // Pause before the card appears.
     await sleep(700);
+    // Dealer takes a third card.
     const c = deck.pop(); dealerHand.push(c);
+    // Show it face up with the flip animation.
     addCard('D', c, false, 'flip');
+    // Update the Dealer's value.
     el('infoD').textContent = describe(dealerHand);
+    // Pause.
     await sleep(700);
+  // Otherwise the Dealer stays.
   } else {
+    // Announce it.
     say('D', 'Stay.');
+    // Pause.
     await sleep(700);
   }
+  // Remove the bubble.
   say('D', '');
+  // All turns are done: compare hands and pay out.
   await showdown();
 }
 
+// =================== SHOWDOWN & PAYOUTS ===================
+// Reveals every hand and settles each player against the Dealer, one seat at a time.
 async function showdown() {
+  // Status message.
   setStatus('Showdown!');
+  // Clear the turn highlight.
   setActive(null);
+  // Clear the Dealer's cards...
   el('cardsD').innerHTML = '';
+  // ...and redraw them all face up with the flip animation (also covers the "Dealer Pok" shortcut).
   dealerHand.forEach(c => addCard('D', c, false, 'flip'));
+  // Show the Dealer's hand description.
   el('infoD').textContent = describe(dealerHand);
+  // dv = Dealer value, dd = Dealer deng multiplier, dPok = Dealer has Pok?
   const dv = handVal(dealerHand), dd = deng(dealerHand), dPok = isPok(dealerHand);
+  // Show the Dealer's result badge, e.g. "7 x2".
   setRes('D', dv + (dPok ? ' POK!' : '') + (dd > 1 ? ' ×' + dd : ''), 't');
+  // Pause.
   await sleep(800);
 
+  // Settle seat 0 (you), 1 (Somchai), 2 (Nok) one after another.
   for (let i = 0; i < 3; i++) {
+    // Spotlight this player.
     setActive(i);
+    // Bots' cards are still face down, so reveal them (yours are already visible).
     if (i > 0) {
+      // Remove the face-down cards...
       el('cards' + i).innerHTML = '';
+      // ...and show the real cards with a flip.
       hands[i].forEach(c => addCard(i, c, false, 'flip'));
+      // Show the bot's value.
       el('info' + i).textContent = describe(hands[i]);
+      // Pause.
       await sleep(700);
     }
+    // pv = player value, pd = player deng, pPok = player has Pok?
     const pv = handVal(hands[i]), pd = deng(hands[i]), pPok = isPok(hands[i]);
+    // delta = chips won (+) or lost (-). Starts at 0 = tie.
     let delta = 0;
+    // PLAYER WINS if: Player has Pok and Dealer does not, OR (same Pok status AND higher value).
     const playerBeats = (pPok && !dPok) || (pv > dv && pPok === dPok);
+    // DEALER WINS with the mirror-image rule.
     const dealerBeats = (dPok && !pPok) || (dv > pv && pPok === dPok);
+    // Win: gain bet x your deng.
     if (playerBeats) delta = bets[i] * pd;
+    // Lose: pay bet x the DEALER's deng (negative number).
     else if (dealerBeats) delta = -bets[i] * dd;
+    // Update the player's chips (nothing changes on a tie).
     chips[i] += delta;
+    // Show the WIN / LOSE / TIE badge in green, red or gray.
     setRes(i, delta > 0 ? 'WIN +' + delta : delta < 0 ? 'LOSE ' + delta : 'TIE',
            delta > 0 ? 'w' : delta < 0 ? 'l' : 't');
+    // Status line summary, e.g. "You: wins +20 (8 Pok vs 5)".
     setStatus(NAMES[i] + ': ' + (delta > 0 ? 'wins +' + delta : delta < 0 ? 'loses ' + delta : 'tie') +
               '  (' + pv + (pPok?' Pok':'') + ' vs ' + dv + (dPok?' Pok':'') + ')');
+    // Refresh the chip numbers on screen.
     updateChips();
+    // Pause before the next player.
     await sleep(1000);
   }
+  // Everyone settled: remove the highlight.
   setActive(null);
   // out of chips? offer a restart, otherwise go straight back to betting
+  // If YOU are out of chips the game cannot continue...
   if (chips[0] <= 0) {
+    // ...so lock into the 'done' phase...
     phase = 'done';
+    // ...tell the player...
     setStatus('💸 You are out of chips!');
+    // ...create a Restart button...
     const b = document.createElement('button');
+    // ...label it...
     b.textContent = '💸 Restart';
+    // ...clicking it resets everyone to 100 chips and starts again.
     b.onclick = () => { chips = [100,100,100]; roundN = 0; nextRound(); };
+    // Show the button.
     el('actions').appendChild(b);
+    // Stop here (no new round until Restart).
     return;
   }
+  // Otherwise: go to the next round number.
   roundN++;
+  // A broke bot gets 100 new chips so the table stays full.
   if (chips[1] <= 0) chips[1] = 100;
+  // Same for the second bot.
   if (chips[2] <= 0) chips[2] = 100;
+  // Refresh numbers.
   updateChips();
+  // Return to the betting phase (chips clickable again).
   phase = 'bet';
+  // Re-enable the Deal button.
   el('dealBtn').disabled = false;
+  // Prompt the player. Last round's cards stay visible until the next Deal.
   setStatus('Round over — pick your bet and press Deal!');
 }
 
+// Full reset to a clean betting state. Now only used by the Restart button.
 function nextRound() {
+  // Next round number; go back to betting.
   roundN++; phase = 'bet';
+  // Top up broke bots.
   if (chips[1] <= 0) chips[1] = 100; if (chips[2] <= 0) chips[2] = 100;
+  // Refresh numbers.
   updateChips();
+  // Enable Deal.
   el('dealBtn').disabled = false;
+  // Remove any leftover buttons (like Restart).
   el('actions').innerHTML = '';
+  // Clear cards, text, badges and bubbles from every seat.
   ['D','0','1','2'].forEach(i => { el('cards'+i).innerHTML=''; el('info'+i).textContent=''; setRes(i,''); say(i,''); });
+  // Remove all turn highlights.
   document.querySelectorAll('.seat').forEach(s => s.classList.remove('active'));
+  // Clear the bet labels.
   for (let i = 0; i < 3; i++) el('bet' + i).textContent = '';
+  // Show the hint on the felt again.
   el('feltHint').style.display = '';
+  // Prompt the player.
   setStatus('Choose your bet and press Deal!');
 }
 
+// =================== TUTORIAL ===================
+// Helper: C(suit, rank) builds a card id so examples are readable, e.g. C(0,12) = King of spades.
 const C = (suit, rank) => suit * 13 + rank;   // tutorial helper
 
+// Builds ONE example row for the tutorial: example cards + value badge + explanation text.
 function tutRow(cards, badge, badgeCls, text) {
+  // Outer row container.
   const row = document.createElement('div'); row.className = 'tut-row';
+  // Container for the example cards.
   const cc = document.createElement('div'); cc.className = 'tut-cards';
+  // Draw each example card with the same cardEl() the game uses.
   cards.forEach(c => cc.appendChild(cardEl(c, false)));
+  // The badge element (value label); badgeCls may add the green "good" style.
   const bd = document.createElement('div'); bd.className = 'tut-badge' + (badgeCls ? ' ' + badgeCls : '');
+  // Put the label text in the badge.
   bd.textContent = badge;
+  // The explanation element.
   const tx = document.createElement('div'); tx.className = 'tut-txt';
+  // innerHTML (not textContent) so <b>bold</b> tags in the text work.
   tx.innerHTML = text;
+  // Assemble: cards, then badge, then text.
   row.appendChild(cc); row.appendChild(bd); row.appendChild(tx);
+  // Give the finished row back.
   return row;
 }
 
+// Opens the Tutorial popup on a given tab ('values', 'pok' or 'deng').
 function showTutorial(tab) {
+  // If no tab was given, start on 'values'.
   tab = tab || 'values';
+  // The popup window element.
   const box = el('msgBox');
+  // Use the wider style for the tutorial.
   box.className = 'wide';
+  // Reset the popup content with a heading.
   box.innerHTML = '<h2>📚 How to Read Your Hand</h2>';
 
+  // Create the row of tab buttons.
   const tabs = document.createElement('div'); tabs.className = 'tut-tabs';
+  // For each [id, label] pair, make one tab button.
   [['values','1️⃣ Card Values'],['pok','⭐ Pok'],['deng','💰 Deng Multipliers']].forEach(([id,label]) => {
+    // New button element.
     const b = document.createElement('button');
+    // Set its label; the active tab gets class "on" (white).
     b.textContent = label; if (id === tab) b.className = 'on';
+    // Clicking a tab re-opens the tutorial on that tab.
     b.onclick = () => showTutorial(id);
+    // Add the button to the tab row.
     tabs.appendChild(b);
   });
+  // Add the tab row to the popup.
   box.appendChild(tabs);
 
+  // Container for the content of the chosen tab.
   const body = document.createElement('div');
 
+  // TAB 1: how card values and the mod-10 rule work.
   if (tab === 'values') {
+    // Intro paragraph element.
     const p = document.createElement('p');
+    // Small text and spacing for the paragraph.
     p.style.cssText = 'font-size:13px;margin-bottom:4px';
+    // Intro text for this tab.
     p.innerHTML = 'Your hand value is the <b>sum of your cards, keeping only the last digit</b> (mod 10). Closest to 9 wins!';
+    // Add the paragraph.
     body.appendChild(p);
+    // Example: an Ace is worth 1.
     body.appendChild(tutRow([C(1,0)], '1', '', '<b>Ace = 1</b>'));
+    // Example: number cards are worth their number.
     body.appendChild(tutRow([C(3,4)], '5', '', '<b>2–9 = face value</b> (a 5 is worth 5)'));
+    // Example: 10, J, Q, K are all worth 0.
     body.appendChild(tutRow([C(0,9), C(1,10), C(2,11), C(3,12)], '0', '', '<b>10, J, Q, K = 0</b> — they add nothing!'));
+    // Example: 4 + 3 = 7.
     body.appendChild(tutRow([C(0,3), C(1,2)], '7', '', '4 + 3 = <b>7</b> — simple sum'));
+    // Example: 7 + 8 = 15, keep the last digit = 5.
     body.appendChild(tutRow([C(2,6), C(3,7)], '5', '', '7 + 8 = 15 → keep last digit → <b>5</b>'));
+    // Example: K + 9 = 9, the best possible value.
     body.appendChild(tutRow([C(0,12), C(1,8)], '9', 'good', 'K + 9 = 0 + 9 = <b>9, the best value!</b> Face cards make great partners.'));
   }
 
+  // TAB 2: Pok hands.
   if (tab === 'pok') {
+    // Intro paragraph (same pattern as above).
     const p = document.createElement('p');
+    // Same styling.
     p.style.cssText = 'font-size:13px;margin-bottom:4px';
+    // Explains Pok.
     p.innerHTML = '<b>Pok</b> = your <b>first two cards</b> total 8 or 9. You stand automatically — and a Pok hand <b>beats any non-Pok hand</b>, even one worth more!';
+    // Add it.
     body.appendChild(p);
+    // Example: 4 + 5 = Pok 9.
     body.appendChild(tutRow([C(1,3), C(0,4)], 'POK 9', 'good', '4 + 5 = <b>Pok 9</b> — the strongest hand in the game 🏆'));
+    // Example: K + 8 = Pok 8.
     body.appendChild(tutRow([C(2,12), C(3,7)], 'POK 8', 'good', 'K + 8 = 0 + 8 = <b>Pok 8</b> — still beats everything except Pok 9'));
+    // Warning example: three cards can never be Pok.
     body.appendChild(tutRow([C(0,8), C(1,8), C(3,1)], '0', '', '⚠️ 9 + 9 + 2 = 20 → value 0. <b>Three cards can never be Pok</b> — only your first two count!'));
+    // Example: Pok that is also suited pays double.
     body.appendChild(tutRow([C(1,4), C(1,3)], 'POK 9 ×2', 'good', 'Pok <b>and</b> same suit — instant win paying <b>double</b> 💎'));
   }
 
+  // TAB 3: deng multipliers.
   if (tab === 'deng') {
+    // Intro paragraph.
     const p = document.createElement('p');
+    // Same styling.
     p.style.cssText = 'font-size:13px;margin-bottom:4px';
+    // Explains deng.
     p.innerHTML = '<b>Deng</b> = payout multiplier. Win with one of these shapes and your bet is multiplied. Lose against a dealer deng and you pay more — so they cut both ways!';
+    // Add it.
     body.appendChild(p);
+    // Example: Pair, x2.
     body.appendChild(tutRow([C(0,6), C(1,6)], '×2', '', '<b>Pair</b> — two cards of the same rank (7♠ 7♥)'));
+    // Example: Suited, x2.
     body.appendChild(tutRow([C(1,1), C(1,8)], '×2', '', '<b>Suited</b> — two cards of the same suit (both ♥)'));
+    // Example: Straight 4-5-6, x3.
     body.appendChild(tutRow([C(0,3), C(1,4), C(2,5)], '×3', '', '<b>Straight</b> — three in a row (4-5-6), suits may differ'));
+    // Example: Flush, x3.
     body.appendChild(tutRow([C(3,1), C(3,6), C(3,11)], '×3', '', '<b>Flush</b> — three cards of the same suit (all ♣)'));
+    // Example: Three of a kind, x5.
     body.appendChild(tutRow([C(0,5), C(1,5), C(2,5)], '×5', 'good', '<b>Three of a kind</b> — the rarest, pays five times your bet! 🎰'));
+    // Extra tip paragraph.
     const note = document.createElement('p');
+    // Tip styling.
     note.style.cssText = 'font-size:12px;margin-top:8px;color:#ffe0a3';
+    // Tip text: deng only matters if you win the value battle first.
     note.innerHTML = '💡 Tip: deng only matters if you <b>win</b> the value battle first — a ×5 hand worth 1 still loses to a plain hand worth 7!';
+    // Add the tip.
     body.appendChild(note);
   }
 
+  // Put the chosen tab's content into the popup.
   box.appendChild(body);
+  // Create a Close button.
   const close = document.createElement('button');
+  // Label it.
   close.textContent = 'Close';
+  // Small gap above it.
   close.style.marginTop = '10px';
+  // Clicking hides the popup and resets its width style.
   close.onclick = () => { el('msg').style.display = 'none'; box.className = ''; };
+  // Add the button.
   box.appendChild(close);
+  // Show the popup overlay.
   el('msg').style.display = 'flex';
 }
 
+// Opens the simple text Rules popup.
 function showRules() {
+  // The popup window.
   const box = el('msgBox');
+  // Use the normal (narrow) width.
   box.className = '';
+  // Fill the popup with the rules text (HTML string joined with +).
   box.innerHTML = '<h2>📖 Pok Deng Rules</h2><div style="text-align:left;font-size:14px;line-height:1.7">' +
   '<p><b>Goal:</b> get a hand value closer to 9 than the Dealer. Everyone plays against the Dealer only.</p>' +
   '<p><b>Value:</b> sum of cards, <b>mod 10</b> (only last digit counts). A=1, 2–9 face value, 10/J/Q/K=0.</p>' +
@@ -534,12 +946,20 @@ function showRules() {
   '<p><b>Payout:</b> win → bet × your deng. Lose → bet × dealer deng. Tie → nothing changes.</p>' +
   '<p style="color:#ffd45e"><b>Note:</b> chips are just points for fun — no real money here! 😊</p>' +
   '</div><br><button onclick="document.getElementById(\'msg\').style.display=\'none\'">Close</button>';
+  // Show the popup.
   el('msg').style.display = 'flex';
 }
 
+// =================== START-UP ===================
+// These three lines run once when the page opens. First: scale the table to the window.
 fit();
+// Show the first prompt.
 setStatus('Choose your bet and press Deal!');
+// Show the starting chip counts (100 each).
 updateChips();
+<!-- End of JavaScript. -->
 </script>
+<!-- End of the visible page. -->
 </body>
+<!-- End of the HTML document. -->
 </html>
