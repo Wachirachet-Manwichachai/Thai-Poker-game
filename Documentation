@@ -3,7 +3,8 @@
 
 ## 1. My Development Process
 
-During the development of my Pok Deng game, I used AI as a tool to help me understand and develop the code. Since the game involved many different systems, such as dealing cards, calculating hand values, allowing players to draw or stay, and determining the winner, I found it difficult to understand how every part of the code worked together.
+During the development of my Thai poker game or Pok Deng, I used WebbGPT as a tool to help me understand and develop the code. Since the game involved many different systems and complex function like dealing cards, calculation the hand value, player decision making(draw or stay) and determined the winner which not only compare between me and the deal but also the other players. Which I found I way to understand a system before deep analyse the code and it properties.
+
 
 Instead of simply asking AI to generate the entire game, I used it to help me understand the program's structure and the purpose of different sections of code. One method I focused on was using a **flowchart to visualize the logic of the game**. This helped me break a complicated program into smaller steps and understand how the game moves from one stage to another.
 
