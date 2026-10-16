@@ -1,0 +1,138 @@
+<!-- Tells the browser: "this is a modern HTML5 page". -->
+<!DOCTYPE html>
+<!-- Root element that wraps the whole page. lang="en" helps translators and screen readers. -->
+<html lang="en">
+<!-- HEAD = information ABOUT the page (nothing here is drawn on screen except through CSS). -->
+<head>
+<!-- UTF-8 lets the page show Thai text, emoji and the card symbols correctly. -->
+<meta charset="UTF-8">
+<!-- Makes the page fit properly on phones and small screens. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- The text shown on the browser tab. -->
+<title>Pok Deng (ป๊อกเด้ง) Dashboard</title>
+<!-- CSS starts here. CSS controls how everything LOOKS (colors, sizes, positions). -->
+<style>
+  /* RESET for every element (*): remove default spacing; box-sizing makes width include padding and border. */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Whole-page look: font, dark wood background gradient, white text, content stacked in one centered column. */
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a0d08 radial-gradient(ellipse at 50% 0%, #3a1f12 0%, #140a06 70%);
+    min-height: 100vh; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 15px; user-select: none; overflow-x: hidden; overflow-y: auto; }
+  
+  /* Layout Wrapper for Dashboard */
+  .dashboard-container { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1400px; margin-top: 10px; flex-wrap: wrap; }
+  
+  /* Left Panel: Documentation */
+  .docs-panel { flex: 1; min-width: 320px; max-width: 400px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 212, 94, 0.2); border-radius: 12px; padding: 20px; height: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+  .docs-panel h2 { font-size: 1.35em; color: #ffd45e; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; }
+  .docs-panel h3 { font-size: 1.05em; color: #4fc3f7; margin: 14px 0 6px 0; }
+  .docs-panel p, .docs-panel li { font-size: 13px; color: #ddd; line-height: 1.5; margin-bottom: 8px; }
+  .docs-panel ul { padding-left: 18px; }
+  .docs-panel code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #ffd45e; }
+
+  /* Right Panel: Game Workspace */
+  .game-panel { flex: 2; min-width: 600px; display: flex; flex-direction: column; align-items: center; }
+
+  /* Style of the big title at the top. */
+  h1 { font-size: 1.5em; margin: 2px 0 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,.6); color: #ffd45e; }
+  /* The small bar holding the round number and game updates. */
+  #topbar { display: flex; gap: 14px; align-items: center; background: rgba(0,0,0,.45); padding: 6px 16px; border-radius: 8px; font-size: 13px; flex-wrap: wrap; justify-content: center; z-index: 5; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.05); }
+  /* Bold numbers inside the top bar are shown in gold. */
+  #topbar b { color: #ffd45e; }
+  
+  /* Default look of ALL buttons: gold, rounded, with a shadow. */
+  button { background: #e8b84b; color: #3a2a00; border: none; border-radius: 8px; padding: 8px 18px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,.4); margin: 4px; transition: all 0.2s ease; }
+  /* Lighter gold while the mouse is over a button. */
+  button:hover { background: #ffd066; transform: translateY(-1px); }
+  button:active { transform: translateY(1px); }
+  /* A disabled button is faded and not clickable-looking. */
+  button:disabled { opacity: .3; cursor: default; transform: none; }
+  /* Special colors: Draw button = blue, Stay button = green. */
+  button.hit { background: #4fc3f7; color: #002d42; } button.hit:hover { background: #81d4fa; }
+  button.stay { background: #81c784; color: #0a330e; } button.stay:hover { background: #a5d6a7; }
+  
+  /* Action control dock beneath the table */
+  .controls { margin-top: 15px; display: flex; gap: 10px; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,212,94,0.1); }
+
+  /* ============ THE TABLE ============ */
+  #tableWrap { position: relative; width: 100%; max-width: 920px; height: 500px; margin-top: 4px; }
+  /* The green oval table: felt gradient, wooden border, and inner shadows for depth. */
+  #felt { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 100%; height: 100%; border-radius: 50% / 46%;
+    background: radial-gradient(ellipse at 50% 38%, #2e8b57 0%, #1d6a40 55%, #14502f 100%); border: 12px solid #5a3a1e;
+    box-shadow: inset 0 0 60px rgba(0,0,0,.55), 0 12px 30px rgba(0,0,0,.65), inset 0 4px 10px rgba(255,255,255,.08); }
+  /* decorative thin gold line inside the table edge */
+  #felt::before { content: ''; position: absolute; inset: 16px; border: 2px solid rgba(255,220,130,.2); border-radius: 50% / 46%; pointer-events: none; }
+  /* Faint logo in middle of felt */
+  #feltLogo { position: absolute; left: 50%; top: 38%; transform: translate(-50%,-50%); text-align: center; color: rgba(255,255,255,.1); font-weight: bold; font-size: 24px; letter-spacing: 4px; pointer-events: none; font-style: italic; }
+
+  /* Deck pile in center */
+  #deckPile { position: absolute; left: 50%; top: 48%; transform: translate(-50%,-50%); width: 46px; height: 64px; }
+  #deckPile .back-card { position: absolute; width: 46px; height: 64px; background: #b71c1c; border: 2px solid white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+  #deckPile .back-card:nth-child(1) { top: 3px; left: 3px; }
+  #deckPile .back-card:nth-child(2) { top: 0px; left: 0px; }
+
+  /* ============ SEATS ============ */
+  .seat { position: absolute; width: 180px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  #seatD { left: 50%; top: 15px; transform: translateX(-50%); }
+  #seat1 { right: 15px; top: 175px; }     /* Somchai right */
+  #seat2 { left: 15px;  top: 175px; }     /* Nok left  */
+  #seat0 { left: 50%; bottom: 15px; transform: translateX(-50%); } /* You */
+
+  /* Rounded plate for each player */
+  .plate { display: inline-flex; gap: 6px; align-items: center; background: rgba(0,0,0,.65); border: 2px solid rgba(255,212,94,.25); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: bold; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+  .seat.active .plate { border-color: #ffd45e; box-shadow: 0 0 14px rgba(255,212,94,.7); }
+  .plate .av { font-size: 15px; }
+  .plate .chipC { color: #9fd8c0; font-weight: normal; }
+  
+  /* Status results overlay badges */
+  .res { position: absolute; left: 50%; transform: translateX(-50%); top: -24px; font-weight: bold; font-size: 11px; background: rgba(0,0,0,.85); border-radius: 6px; padding: 2px 8px; white-space: nowrap; border: 1px solid transparent; letter-spacing: 0.5px; }
+  .res.w { color: #2ecc71; border-color: #2ecc71; } .res.l { color: #e74c3c; border-color: #e74c3c; } .res.t { color: #bdc3c7; border-color: #bdc3c7; }
+  
+  /* Speech bubble alerts */
+  .bubble { position: absolute; left: 50%; transform: translateX(-50%); top: -48px; background: #fff; color: #222; border-radius: 8px; padding: 3px 10px; font-size: 11px; font-weight: bold; white-space: nowrap; animation: pop .22s ease; z-index: 8; box-shadow: 0 3px 6px rgba(0,0,0,0.3); }
+  .bubble::after { content:''; position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #fff; border-bottom: 0; }
+  @keyframes pop { from { transform: translateX(-50%) scale(.6); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+
+  /* Cards container within a seat */
+  .cards { display: flex; justify-content: center; min-height: 70px; margin-top: 4px; height: 74px; width: 120px; position: relative; }
+  #seatD .cards { margin-top: 6px; }
+  #seat0 .cards { margin-top: 2px; }
+  .handinfo { font-size: 11px; color: #ffe0a3; min-height: 15px; text-shadow: 0 1px 2px #000; margin-top: 2px; font-weight: 500; }
+
+  /* Repaired/Completed Card fanning styles */
+  .card { width: 48px; height: 68px; border-radius: 5px; background: #fff; color: #111; position: absolute; box-shadow: 0 3px 6px rgba(0,0,0,.45); display: flex; flex-direction: column; justify-content: space-between; padding: 3px 5px; font-weight: bold; font-size: 12px; border: 1px solid #ccc; transition: all 0.3s ease; }
+  /* Card suites colors */
+  .card.red { color: #d32f2f; }
+  .card.black { color: #111; }
+  
+  /* Overlapping fan engine offsets */
+  .cards .card:nth-child(1) { left: 15px; transform: rotate(-8deg) translateY(2px); z-index: 1; }
+  .cards .card:nth-child(2) { left: 35px; transform: rotate(0deg); z-index: 2; }
+  .cards .card:nth-child(3) { left: 55px; transform: rotate(8deg) translateY(2px); z-index: 3; }
+  
+  /* Responsive breakpoint for stacked setups on mid-size screens */
+  @media(max-width: 1100px) {
+    .dashboard-container { flex-direction: column; align-items: center; }
+    .docs-panel { max-width: 100%; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>Pok Deng Casino Club</h1>
+
+  <div class="dashboard-container">
+    
+    <!-- LEFT PANEL: Text Manual & Documentation -->
+    <div class="docs-panel">
+      <h2>System Manual</h2>
+      <p>Welcome to your hosted environment. This web module combines modern CSS absolute table plotting alongside structured gaming assets.</p>
+      
+      <h3>Game Architecture</h3>
+      <p>The system evaluates scores via a modular layout engine. Point scales range from <code>0</code> up to <code>9</code>. Face values are computed as follows:</p>
+      <ul>
+        <li><strong>Aces</strong> track as 1 point.</li>
+        <li><strong>2-9</strong> represent their literal values.</li>
+        <li><strong>10, J, Q, K</strong> generate 0 points.</li>
+      </ul>
+
+      <h3>What is Pok?</h3>
